@@ -1,0 +1,300 @@
+---
+title: "CIA 1"
+author: "2027829 C. Vamsi Krishna"
+date: "7/29/2021"
+output: html_document
+---
+Problem Statement: The company recruites the various students from various reputed institutions. During the process the HR department cross verifies the certificates and scores of the students at various stages of his/her education life. The salary allotment is one of the major problem for the HR department. So, the problem statement is to estimate the package that can be offered the employee based on their educational background.
+
+```{r}
+Placement_data <- read.csv("C:/Users/cvks2/OneDrive/Desktop/SUBJECTS/Sem 4/ML-1/Placement_data_full_class.csv",stringsAsFactors = TRUE)
+str(Placement_data)
+
+```
+The data is imported and the above output shows the structure of the data.
+```{r}
+list_na <- colnames(Placement_data)[apply(Placement_data, 2, anyNA) ]
+list_na
+Placement_data$salary[which(is.na(Placement_data$salary))] = 0
+```
+The dataset contains missing values in the salary variable. It is clear that the empty column is relating to the student who are not yet placed in any of the company. So I have filled that empty space with the value ZERO.
+
+```{r}
+out1=boxplot.stats(Placement_data$ssc_p)$out
+out2=boxplot.stats(Placement_data$hsc_p)$out
+out3=boxplot.stats(Placement_data$degree_p)$out
+out4=boxplot.stats(Placement_data$mba_p)$out
+out_ind1 <- which(Placement_data$hsc_p %in% c(out2))
+out_ind1
+out_ind2 <- which(Placement_data$degree_p %in% c(out3))
+out_ind2
+```
+These are the row which contains the outlier values with respect to the salary variable. However the values are not mistakenly entered and are actually appropriate to the variable of the data
+
+```{r}
+library(fastDummies)
+results <- fastDummies::dummy_cols(Placement_data, remove_first_dummy = TRUE)
+```
+The data contains both categorical and scale variables. To perform the regression model we need to convert these categorical into scale variables. So, I have performed this conversion of data.
+
+```{r}
+data2<- results[,c("ssc_p","hsc_p","degree_p","etest_p","mba_p","salary","workex_Yes","specialisation_Mkt&HR",
+                   "status_Placed","degree_t_Sci&Tech","gender_M","ssc_b_Others","hsc_b_Others",
+                   "hsc_s_Commerce","hsc_s_Science","degree_t_Others")]
+```
+I have created a seperate data frame for the converted data by considering requried variables
+
+```{r}
+standardize<- function(x){
+  return((x - mean(x, na.rm = TRUE))/ sd(x, na.rm = TRUE))
+}
+std_data= as.data.frame(apply(data2[],2, standardize))
+```
+The data contains the different units of values, so to make all the scale values to come under same scale I have standardize the scale data.
+
+```{r}
+data2_corr = cor(std_data)
+data2_corr
+
+library(corrplot)
+corrplot(data2_corr)
+```
+This shows the correlation of the data variables with each other. From this we can conclude that the scale variables have a strong positive relationship compared to the other variables.
+```{r}
+t.test(Placement_data$salary)
+```
+H0: The salary offered to the student is equal to Zero
+H1: The salary offered to the student is not equal to Zero
+
+The value of the P is 2.2e-16 which is less than 0.05. So, we can reject the null hypothesis and accept the alternative hypothesis. 
+The salary offered to the student is not equal to zero and infact 198702 is an average salary is been offering to the students by the companies.
+
+```{r}
+t.test(Placement_data$salary ~ Placement_data$gender)
+```
+H0: There is no significance difference in salary with respect to gender
+H1: There is a significance difference in salary with respect to gender
+
+The value of the P is 0.03089 which is less than 0.05. So, we can reject the null hypothesis and accept the alternative hypothesis. 
+There is a significance difference in salary with respect to gender with 168815 average salary is offering to the female candidate and 215043 to the male candidate on an average. So, comparitively male candidates are offered woth more salary.
+
+```{r}
+t.test(Placement_data$salary ~ Placement_data$workex)
+```
+H0: There is no significance difference in salary with respect to Work experience
+H1: There is a significance difference in salary with respect to work experience
+
+The value of the P is 1.604e-05 which is less than 0.05. So, we can reject the null hypothesis and accept the alternative hypothesis. 
+There is a significance difference in salary with respect to work experience with 165333 average salary is offering to the non experienced candidate and 262283 to the experienced candidate on an average. So, comparitively the experienced candidates are offered with more package.
+
+
+```{r}
+t.test(Placement_data$salary ~ Placement_data$specialisation )
+```
+H0: There is no significance difference in salary with respect to Specialization
+H1: There is a significance difference in salary with respect to Specialization
+
+The value of the P is 3.436e-05 which is less than 0.05. So, we can reject the null hypothesis and accept the alternative hypothesis. 
+There is a significance difference in salary with respect to specialization with 236591 average salary is offering to the marketing & finance specialization candidate and 150842 to the marketing & HR candidate on an average. So, comparitively marketing & finance combination specialization candidates are offered with more package.
+
+```{r}
+cor.test(Placement_data$salary, Placement_data$ssc_p)
+```
+H0: There is no significant relationship between the salary and ssc percentage
+H1: There is a significant relationship between the salary and ssc percentage
+
+The value of the P is 2.2e-16 which is less than 0.05. So, we can reject the null hypothesis and accept the alternative hypothesis. 
+There is 0.5380897 significant relationship between the salary and SSC percentage 
+
+```{r}
+cor.test(Placement_data$salary, Placement_data$hsc_p)
+```
+H0: There is no significant relationship between the salary and HSC percentage
+H1: There is a significant relationship between the salary and HSC percentage
+
+The value of the P is 2.976e-12 which is less than 0.05. So, we can reject the null hypothesis and accept the alternative hypothesis. 
+There is 0.4525688 significant relationship between the salary and HSC percentage 
+
+
+```{r}
+cor.test(Placement_data$salary, Placement_data$degree_p)
+```
+H0: There is no significant relationship between the salary and Degree percentage
+H1: There is a significant relationship between the salary and Degree percentage
+
+The value of the P is 4.767e-10 which is less than 0.05. So, we can reject the null hypothesis and accept the alternative hypothesis. 
+There is 0.4083708 significant relationship between the salary and Degree percentage 
+
+
+```{r}
+cor.test(Placement_data$salary, Placement_data$mba_p)
+```
+H0: There is no significant relationship between the salary and MBA percentage
+H1: There is a significant relationship between the salary and MBA percentage
+
+The value of the P is 0.04053 which is less than 0.05. So, we can reject the null hypothesis and accept the alternative hypothesis. 
+There is 0.1398227 significant relationship between the salary and MBA percentage 
+```{r}
+anova1<-aov(Placement_data$salary ~ Placement_data$degree_t)
+summary(anova1)
+print(anova1)
+```
+H0: There is no significant relationship between the salary and Degree specialization
+H1: There is a significant relationship between the salary and Degree specialization
+
+The value of the P is 0.188 which is greater than 0.05. So, we can reject the null hypothesis and accept the alternative hypothesis. 
+There is no significant relationship between the salary and Degree specialization 
+
+```{r}
+library(ggplot2)
+ggplot(Placement_data, aes(Placement_data$salary))+geom_histogram()
+```
+The salary data contains with respect to the placed and not placed candidates. So, the 0 in the histogram indicates the details of the condidates who are not yet placed and the rest histogram is related to placed candidates which is indicates the right skewed. 
+
+```{r}
+ggplot(Placement_data, aes(Placement_data$ssc_p))+geom_histogram()
+```
+The SSC percentage data is almost normally distributed.
+
+```{r}
+ggplot(Placement_data, aes(Placement_data$hsc_p))+geom_histogram()
+```
+The HSC percentage data is almost normally distributed.
+
+```{r}
+ggplot(Placement_data, aes(Placement_data$degree_p))+geom_histogram()
+```
+
+The degree percentage data is almost normally distributed.
+
+```{r}
+ggplot(Placement_data, aes(Placement_data$mba_p))+geom_histogram()
+```
+The MBA percentage data is almost normally distributed with slight right skew in nature.
+
+```{r}
+library(caTools)
+set.seed(100) 
+split1<- sample.split(std_data$ssc_p, SplitRatio = 0.7)
+summary(split1)
+datatrain1<- subset(std_data, split1==TRUE)
+datatest1<- subset(std_data, split1==FALSE)
+```
+Here I have divided the total data set in to training and testing data using caTools library and sample.split funtion
+
+```{r}
+reg<-lm(salary ~
+           ssc_p+ hsc_p+ degree_p+ 
+           mba_p+ workex_Yes+ gender_M, data=datatrain1)
+summary(reg)
+```
+Regression Model Equation:
+
+Salary = -0.03105 + ssc_p(033654) + hsc_p(0.23467) + degree_p(0.20875) - mba_p(0.18526) + worker_Yes(0.20616) +                     gender_M(0.13799)
+All variables are significant to each other with respect to salary. 
+
+There is 44% of the variation in dependent variable with respect to the other independent variables which means there are other parameters which are affecting the salary offering to the candidate by the company. All the P-values are less than 0.05 which indicates that the independent variables are significant to the salary offered. 
+
+```{r}
+boxplot(reg$residuals)
+```
+The boxplot represent the outliers of the residuals which shows some variation in the model accuracy.
+
+```{r}
+plot(reg)
+```
+These various plots represents the outlier row numbers. However the data is appropriate with respect to the particular variables. So there is no need to remove these outliers.
+
+```{r}
+shapiro.test(reg$residuals)
+```
+H0: The data is normally distributed
+H1: The data is not normally distributed
+
+The value of P is 2.928e-09 which is less than the 0.05. so reject null hypothesis and accept alternative hypothesis.
+The residual data is not normally distributed.
+
+```{r}
+qqnorm(reg$residuals)
+qqline(reg$residuals)
+```
+This plots represents the data points are linear to the regression line with few outliers.
+```{r}
+hist(reg$residuals)
+```
+
+This also represents that the data is not normally distributed and infact it is right skewed.
+```{r}
+library(moments)
+moments::skewness(reg$residuals)
+moments::kurtosis(reg$residuals)
+```
+As the data is not normally distributed the kurtosis value is more than the required values. 
+
+```{r}
+library(car)
+outlierTest(reg)
+influenceIndexPlot(reg)
+plot(reg$residuals, c(1:length(reg$residuals)))
+```
+
+
+```{r}
+library(lmtest)
+library(fBasics)
+bptest(reg) 
+```
+Ho = data is homoscedasticity
+H1 = data is heteroscedasticity
+The value of P is greater than 0.05 so accept the null and reject the alternative hypothesis.
+The data follows homoscedasticity
+
+```{r}
+library(car)
+vif(reg) 
+```
+The above output tells us that there is no multicollinearity between the variables as the values are less than 2.
+```{r}
+predict1 = predict(reg,datatest1)
+predict1
+```
+
+These are the predicted values for the regression model
+```{r}
+library(Metrics) 
+AIC(reg)
+BIC(reg)
+rmse(predict1,datatest1$salary)
+```
+The Akaike information criterion(AIC) and Bayesian information criterion(BIC) will explains the model complexity and preferably lower value will indicates a better fit model. So, 387.30 of AIC and 412.25 of BIC is lower values indicating the best fit model.
+
+The Root Mean Square Error indicates the difference between the actual value and the predict value which should be as least as possible. However for own model the RMSE is 0.838. There will be some missing parameters in the data set which effects the actual package offered to the candidates.
+```{r}
+library(caret)
+reg10<-train(salary ~ 
+               ssc_p+ hsc_p+ degree_p+ 
+               mba_p+ workex_Yes+ gender_M, data = datatrain1, method="glmnet")
+reg10
+```
+To reduce the RMSE value and to find the best fit model I have performed the elastic net method. This iterates the training of the model by changing the alpha and lambda value to give the final best model. At this point the RMSE value is 0.7782 and R-Square value is 0.4259.
+```{r}
+reg10$bestTune
+```
+The best model contains alpha value of 0.1 and lambda value 0.1093847
+
+```{r}
+varImp(reg10)
+```
+This represents the importance of the independent variables on the dependent variable.  
+```{r}
+best_model1<-reg10$finalModel
+coef(best_model1, s= reg10$bestTune$alpha)
+```
+These are the coefficients of the independent variables with respect to the dependent variable for the best fit model with alpha value 0.1 and lambda value 0.1093847
+
+Salary = -0.03279461 + ssc_p(0.30531735) + hsc_p(0.21623418) + degree_p(0.18929011) - mba_p(0.13585712) + worker_Yes(0.18385882) + gender_M(0.12911591)
+
+
+CONCLUSION:
+
+The multiple linear regression model has shown a significant relationship between the salary/package offered to the students and independent variables like academic background at different stages of education life of the students. The model represent the R-Square value of 46% only which means there are so many other factor which are responsible for the salary offered by the company to the students. So, if we consider those missing parameters then the chances of improve in the R-Square value and make the model more accurate in estimating the package to offer to the candidates.
